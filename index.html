@@ -180,14 +180,18 @@
   .avatar{
     width:44px;height:44px;
     border-radius:50%;
-    background:var(--accent-soft);
-    color:var(--accent);
     flex-shrink:0;
-    display:flex;align-items:center;justify-content:center;
-    overflow:hidden;
     position:relative;
   }
-  .avatar img{width:100%;height:100%;object-fit:cover;}
+  .avatar-img{
+    width:100%;height:100%;
+    border-radius:50%;
+    background:var(--accent-soft);
+    color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .avatar-img img{width:100%;height:100%;object-fit:cover;}
   .avatar.clickable{cursor:pointer;}
   .avatar .play-badge{
     position:absolute;
@@ -208,6 +212,11 @@
     display:inline-flex;
     align-items:center;
     gap:3px;
+    border:none;
+    background:transparent;
+    padding:0;
+    font-family:inherit;
+    cursor:pointer;
   }
 
   .list{display:flex;flex-direction:column;gap:10px;margin-top:8px;}
@@ -227,8 +236,8 @@
     border-color:var(--accent-soft);
   }
   .check{
-    width:30px;
-    height:30px;
+    width:34px;
+    height:34px;
     border-radius:50%;
     border:2px solid var(--border);
     flex-shrink:0;
@@ -237,6 +246,7 @@
     justify-content:center;
     transition:background .15s ease, border-color .15s ease, transform .15s ease;
     background:#fff;
+    cursor:pointer;
   }
   .card.done .check{
     background:var(--accent);
@@ -382,6 +392,84 @@
     justify-content:center;
   }
   .overlay.hidden{display:none;}
+  .overlay.center{align-items:center;padding:0 16px;}
+  .video-modal{
+    background:var(--bg);
+    width:100%;
+    max-width:440px;
+    border-radius:18px;
+    padding:14px;
+    position:relative;
+    animation:up .2s ease;
+  }
+  .video-close{
+    position:absolute;
+    top:-12px;right:-4px;
+    width:32px;height:32px;
+    border-radius:50%;
+    border:2px solid var(--bg);
+    background:var(--text);
+    color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    z-index:2;
+  }
+  .video-frame{
+    width:100%;
+    aspect-ratio:16/9;
+    border-radius:12px;
+    overflow:hidden;
+    background:#111;
+    display:flex;align-items:center;justify-content:center;
+    color:rgba(255,255,255,.8);
+    text-align:center;
+    padding:18px;
+    box-sizing:border-box;
+    font-size:13.5px;
+    line-height:1.5;
+  }
+  .video-frame iframe{width:100%;height:100%;border:0;display:block;}
+  .video-modal-actions{margin-top:14px;}
+  .video-modal-actions .btn{width:100%;}
+
+  .detail-modal{text-align:center;}
+  .detail-photo{
+    width:180px;height:180px;
+    margin:6px auto 16px;
+    border-radius:22px;
+    overflow:hidden;
+    background:var(--accent-soft);
+    color:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .detail-photo img{width:100%;height:100%;object-fit:cover;}
+  .detail-photo svg{width:52px;height:52px;}
+  #detailName{
+    font-size:19px;
+    margin:0 0 5px;
+    font-weight:700;
+  }
+  .detail-meta{
+    font-size:14px;
+    color:var(--text-muted);
+    margin:0 0 3px;
+  }
+  .detail-days{
+    font-size:12.5px;
+    color:var(--accent);
+    font-weight:600;
+    margin:0 0 16px;
+  }
+  .detail-video-btn{
+    width:100%;
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+  }
+  .detail-complete-btn{width:100%;}
+  .detail-complete-btn.is-done{background:var(--text-muted);}
   .sheet{
     background:var(--bg);
     width:100%;
@@ -565,7 +653,7 @@
   <header class="top">
     <div class="title-row">
       <h1 class="display">Daily Movement</h1>
-      <div class="ring-wrap">
+      <div class="ring-wrap" id="ringWrap">
         <svg width="56" height="56" viewBox="0 0 56 56">
           <circle class="ring-track" cx="28" cy="28" r="24" fill="none" stroke-width="5"/>
           <circle class="ring-fill" id="ringFill" cx="28" cy="28" r="24" fill="none" stroke-width="5" stroke-dasharray="150.8" stroke-dashoffset="150.8"/>
@@ -698,6 +786,34 @@
   </div>
 </div>
 
+<!-- Video lightbox -->
+<div class="overlay hidden center" id="videoOverlay">
+  <div class="video-modal">
+    <button class="video-close" id="videoCloseBtn" aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="video-frame" id="videoFrame"></div>
+    <div class="video-modal-actions">
+      <button class="btn primary" id="videoOpenAppBtn">Open in app</button>
+    </div>
+  </div>
+</div>
+
+<!-- Exercise detail modal -->
+<div class="overlay hidden center" id="detailOverlay">
+  <div class="video-modal detail-modal">
+    <button class="video-close" id="detailCloseBtn" aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+    <div class="detail-photo" id="detailPhoto"></div>
+    <h3 class="display" id="detailName"></h3>
+    <p class="detail-meta" id="detailMeta"></p>
+    <p class="detail-days" id="detailDays"></p>
+    <button type="button" class="io-btn detail-video-btn" id="detailVideoBtn" style="display:none;"></button>
+    <button type="button" class="btn primary detail-complete-btn" id="detailCompleteBtn"></button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -762,6 +878,8 @@
   const nextDayBtn = document.getElementById('nextDayBtn');
   const datePicker = document.getElementById('datePicker');
   const jumpTodayBtn = document.getElementById('jumpTodayBtn');
+  const dateNav = document.getElementById('dateNav');
+  const ringWrap = document.getElementById('ringWrap');
   const tabTodayBtn = document.getElementById('tabTodayBtn');
   const tabManageBtn = document.getElementById('tabManageBtn');
   const navToday = document.getElementById('navToday');
@@ -781,6 +899,18 @@
   const removePhotoBtn = document.getElementById('removePhotoBtn');
   const daysGrid = document.getElementById('daysGrid');
   const toast = document.getElementById('toast');
+  const videoOverlay = document.getElementById('videoOverlay');
+  const videoFrame = document.getElementById('videoFrame');
+  const videoCloseBtn = document.getElementById('videoCloseBtn');
+  const videoOpenAppBtn = document.getElementById('videoOpenAppBtn');
+  const detailOverlay = document.getElementById('detailOverlay');
+  const detailCloseBtn = document.getElementById('detailCloseBtn');
+  const detailPhoto = document.getElementById('detailPhoto');
+  const detailName = document.getElementById('detailName');
+  const detailMeta = document.getElementById('detailMeta');
+  const detailDays = document.getElementById('detailDays');
+  const detailVideoBtn = document.getElementById('detailVideoBtn');
+  const detailCompleteBtn = document.getElementById('detailCompleteBtn');
 
   // ---- Date label & navigation
   const RING_CIRC = 2 * Math.PI * 24;
@@ -832,6 +962,9 @@
     tabManageBtn.classList.toggle('active', !isToday);
     navToday.classList.toggle('active', isToday);
     navManage.classList.toggle('active', !isToday);
+    dateNav.style.display = isToday ? '' : 'none';
+    ringWrap.style.display = isToday ? '' : 'none';
+    jumpTodayBtn.classList.toggle('hidden', !isToday || dateToStr(viewDate) === todayStr());
     if(!isToday) renderManage();
   }
   [tabTodayBtn, navToday].forEach(el => el.addEventListener('click', ()=>switchTab('today')));
@@ -858,6 +991,101 @@
     if(!/^https?:\/\//i.test(u)) u = 'https://' + u;
     return u;
   }
+
+  // ---- Video lightbox
+  function getEmbedUrl(rawUrl){
+    try{
+      const u = new URL(rawUrl);
+      const host = u.hostname.replace(/^www\./,'');
+      if(host === 'youtu.be'){
+        const id = u.pathname.slice(1);
+        if(id) return `https://www.youtube.com/embed/${id}`;
+      }
+      if(host.endsWith('youtube.com')){
+        if(u.pathname === '/watch'){
+          const id = u.searchParams.get('v');
+          if(id) return `https://www.youtube.com/embed/${id}`;
+        }
+        let m = u.pathname.match(/^\/shorts\/([^/]+)/);
+        if(m) return `https://www.youtube.com/embed/${m[1]}`;
+        m = u.pathname.match(/^\/embed\/([^/]+)/);
+        if(m) return rawUrl;
+      }
+      if(host === 'vimeo.com'){
+        const m = u.pathname.match(/^\/(\d+)/);
+        if(m) return `https://player.vimeo.com/video/${m[1]}`;
+      }
+    }catch(e){}
+    return null;
+  }
+
+  let currentVideoUrl = '';
+  function openVideoLightbox(url){
+    currentVideoUrl = url;
+    const embed = getEmbedUrl(url);
+    if(embed){
+      videoFrame.innerHTML = `<iframe src="${escapeAttr(embed)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+    } else {
+      videoFrame.innerHTML = `<div>Preview isn't available for this link.<br>Use the button below to open it.</div>`;
+    }
+    let host = '';
+    try{ host = new URL(url).hostname.replace(/^www\./,''); }catch(e){}
+    videoOpenAppBtn.textContent = (host === 'youtu.be' || host.endsWith('youtube.com')) ? 'Open in YouTube app' : 'Open in app';
+    videoOverlay.classList.remove('hidden');
+  }
+  function closeVideoLightbox(){
+    videoOverlay.classList.add('hidden');
+    videoFrame.innerHTML = '';
+    currentVideoUrl = '';
+  }
+  videoCloseBtn.addEventListener('click', closeVideoLightbox);
+  videoOverlay.addEventListener('click', (e)=>{ if(e.target === videoOverlay) closeVideoLightbox(); });
+  videoOpenAppBtn.addEventListener('click', ()=>{
+    if(currentVideoUrl) window.open(currentVideoUrl, '_blank', 'noopener');
+  });
+
+  // ---- Exercise detail modal
+  let detailWorkoutId = null;
+  function openDetail(id){
+    const w = workouts.find(x=>x.id===id);
+    if(!w) return;
+    detailWorkoutId = id;
+    detailName.textContent = w.name;
+    detailMeta.textContent = metaText(w) || 'No reps or sets set';
+    detailDays.textContent = dayTag(w.days);
+    detailPhoto.innerHTML = avatarHtml(w);
+    if(w.videoUrl){
+      detailVideoBtn.style.display = '';
+      detailVideoBtn.innerHTML = `${PLAY_ICON.replace('fill="white"','fill="currentColor" width="12" height="12"')} Watch demo`;
+    } else {
+      detailVideoBtn.style.display = 'none';
+    }
+    updateDetailCompleteBtn();
+    detailOverlay.classList.remove('hidden');
+  }
+  function updateDetailCompleteBtn(){
+    if(!detailWorkoutId) return;
+    const t = dateToStr(viewDate);
+    const done = (completions[t] || []).includes(detailWorkoutId);
+    detailCompleteBtn.textContent = done ? 'Mark incomplete' : 'Mark complete';
+    detailCompleteBtn.classList.toggle('is-done', done);
+  }
+  function closeDetail(){
+    detailOverlay.classList.add('hidden');
+    detailWorkoutId = null;
+  }
+  detailCloseBtn.addEventListener('click', closeDetail);
+  detailOverlay.addEventListener('click', (e)=>{ if(e.target === detailOverlay) closeDetail(); });
+  detailVideoBtn.addEventListener('click', ()=>{
+    const w = workouts.find(x=>x.id===detailWorkoutId);
+    if(w && w.videoUrl) openVideoLightbox(w.videoUrl);
+  });
+  detailCompleteBtn.addEventListener('click', ()=>{
+    if(detailWorkoutId){
+      toggleComplete(detailWorkoutId);
+      updateDetailCompleteBtn();
+    }
+  });
 
   function renderRing(doneCount, total){
     ringLabel.textContent = doneCount + '/' + total;
@@ -888,7 +1116,7 @@
       const hasVideo = !!w.videoUrl;
       return `<div class="card ${done?'done':''}" data-id="${escapeAttr(w.id)}">
         <div class="avatar ${hasVideo?'clickable':''}" data-video="${hasVideo?escapeAttr(w.videoUrl):''}">
-          ${avatarHtml(w)}
+          <div class="avatar-img">${avatarHtml(w)}</div>
           ${hasVideo?`<span class="play-badge">${PLAY_ICON}</span>`:''}
         </div>
         <div class="card-body">
@@ -907,14 +1135,22 @@
       el.addEventListener('click', (e)=>{
         e.stopPropagation();
         const url = el.getAttribute('data-video');
-        if(url) window.open(url, '_blank', 'noopener');
+        if(url) openVideoLightbox(url);
+      });
+    });
+
+    todayList.querySelectorAll('.check').forEach(el=>{
+      el.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const id = el.closest('.card').getAttribute('data-id');
+        toggleComplete(id);
       });
     });
 
     todayList.querySelectorAll('.card').forEach(el=>{
       el.addEventListener('click', ()=>{
         const id = el.getAttribute('data-id');
-        toggleComplete(id);
+        openDetail(id);
       });
     });
   }
@@ -946,12 +1182,15 @@
     }
     manageList.innerHTML = workouts.map(w => `
       <div class="manage-row" data-id="${escapeAttr(w.id)}">
-        <div class="avatar">${avatarHtml(w)}</div>
+        <div class="avatar">
+          <div class="avatar-img">${avatarHtml(w)}</div>
+          ${w.videoUrl?`<span class="play-badge">${PLAY_ICON}</span>`:''}
+        </div>
         <div class="info">
           <p class="card-name">${escapeHtml(w.name)}</p>
           <p class="card-meta">${escapeHtml(metaText(w))}</p>
           <p class="days-tag">${escapeHtml(dayTag(w.days))}</p>
-          ${w.videoUrl ? `<a class="video-link" href="${escapeAttr(w.videoUrl)}" target="_blank" rel="noopener">${PLAY_ICON.replace('fill="white"','fill="currentColor" width="10" height="10"')} Watch demo</a>` : ''}
+          ${w.videoUrl ? `<button type="button" class="video-link" data-video="${escapeAttr(w.videoUrl)}">${PLAY_ICON.replace('fill="white"','fill="currentColor" width="10" height="10"')} Watch demo</button>` : ''}
         </div>
         <button class="icon-btn editBtn" title="Edit" aria-label="Edit">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
@@ -965,6 +1204,12 @@
       btn.addEventListener('click', (e)=>{
         const id = e.currentTarget.closest('.manage-row').getAttribute('data-id');
         openSheet(id);
+      });
+    });
+    manageList.querySelectorAll('.video-link').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        const url = e.currentTarget.getAttribute('data-video');
+        if(url) openVideoLightbox(url);
       });
     });
     manageList.querySelectorAll('.delBtn').forEach(btn=>{
