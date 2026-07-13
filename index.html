@@ -433,7 +433,8 @@
   .video-modal-actions{margin-top:14px;}
   .video-modal-actions .btn{width:100%;}
 
-  .detail-modal{text-align:center;max-height:85vh;overflow-y:auto;}
+  .detail-modal{text-align:center;}
+  .detail-scroll{max-height:80vh;overflow-y:auto;}
   .detail-instructions{
     text-align:left;
     background:var(--card);
@@ -513,7 +514,7 @@
     letter-spacing:.05em;
     margin:14px 0 6px;
   }
-  label:first-of-type{margin-top:0;}
+  .sheet > label:first-of-type{margin-top:0;}
   input[type=text]{
     width:100%;
     padding:12px 13px;
@@ -887,16 +888,18 @@
     <button class="video-close" id="detailCloseBtn" aria-label="Close">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 6l12 12M18 6L6 18"/></svg>
     </button>
-    <div class="detail-photo" id="detailPhoto"></div>
-    <h3 class="display" id="detailName"></h3>
-    <p class="detail-meta" id="detailMeta"></p>
-    <p class="detail-days" id="detailDays"></p>
-    <div id="detailInstructionsWrap" style="display:none;">
-      <p class="detail-instructions-label">Instructions</p>
-      <p class="detail-instructions" id="detailInstructions"></p>
+    <div class="detail-scroll">
+      <div class="detail-photo" id="detailPhoto"></div>
+      <h3 class="display" id="detailName"></h3>
+      <p class="detail-meta" id="detailMeta"></p>
+      <p class="detail-days" id="detailDays"></p>
+      <div id="detailInstructionsWrap" style="display:none;">
+        <p class="detail-instructions-label">Instructions</p>
+        <p class="detail-instructions" id="detailInstructions"></p>
+      </div>
+      <button type="button" class="io-btn detail-video-btn" id="detailVideoBtn" style="display:none;"></button>
+      <button type="button" class="btn primary detail-complete-btn" id="detailCompleteBtn"></button>
     </div>
-    <button type="button" class="io-btn detail-video-btn" id="detailVideoBtn" style="display:none;"></button>
-    <button type="button" class="btn primary detail-complete-btn" id="detailCompleteBtn"></button>
   </div>
 </div>
 
