@@ -391,6 +391,7 @@
     align-items:flex-end;
     justify-content:center;
   }
+  #videoOverlay{ z-index:30; }
   .overlay.hidden{display:none;}
   .overlay.center{align-items:center;padding:0 16px;}
   .video-modal{
@@ -432,7 +433,28 @@
   .video-modal-actions{margin-top:14px;}
   .video-modal-actions .btn{width:100%;}
 
-  .detail-modal{text-align:center;}
+  .detail-modal{text-align:center;max-height:85vh;overflow-y:auto;}
+  .detail-instructions{
+    text-align:left;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:13.5px;
+    line-height:1.6;
+    color:var(--text);
+    white-space:pre-line;
+    margin:0 0 14px;
+  }
+  .detail-instructions-label{
+    text-align:left;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    font-weight:700;
+    color:var(--text-muted);
+    margin:0 0 6px;
+  }
   .detail-photo{
     width:180px;height:180px;
     margin:6px auto 16px;
@@ -503,6 +525,59 @@
     font-family:inherit;
   }
   input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  textarea{
+    width:100%;
+    padding:12px 13px;
+    border-radius:11px;
+    border:1px solid var(--border);
+    background:#fff;
+    font-size:14.5px;
+    color:var(--text);
+    font-family:inherit;
+    resize:vertical;
+    line-height:1.5;
+  }
+  textarea:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .field-hint{
+    font-size:11.5px;
+    color:var(--text-muted);
+    margin:5px 2px 0;
+    line-height:1.4;
+  }
+  .ac-wrap{position:relative;}
+  .ac-dropdown{
+    position:absolute;
+    left:0;right:0;top:calc(100% + 4px);
+    background:#fff;
+    border:1px solid var(--border);
+    border-radius:12px;
+    max-height:230px;
+    overflow-y:auto;
+    z-index:6;
+    box-shadow:0 10px 28px rgba(20,22,18,.14);
+  }
+  .ac-dropdown.hidden{display:none;}
+  .ac-item{
+    padding:10px 12px;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    border-bottom:1px solid var(--border);
+  }
+  .ac-item:last-child{border-bottom:none;}
+  .ac-item:active{background:var(--accent-soft);}
+  .ac-item .ac-sub{
+    font-size:11.5px;
+    font-weight:500;
+    color:var(--text-muted);
+    text-transform:capitalize;
+    margin-top:1px;
+  }
+  .ac-status{
+    padding:11px 12px;
+    font-size:13px;
+    color:var(--text-muted);
+  }
   .photo-row{
     display:flex;
     align-items:center;
@@ -721,7 +796,11 @@
   <div class="sheet">
     <h2 id="sheetTitle">Add workout</h2>
     <label>Name</label>
-    <input type="text" id="fName" placeholder="e.g. Standard Plank">
+    <div class="ac-wrap">
+      <input type="text" id="fName" placeholder="e.g. Standard Plank" autocomplete="off">
+      <div class="ac-dropdown hidden" id="acDropdown"></div>
+    </div>
+    <p class="field-hint">Start typing to search a free exercise database for a matching photo &amp; instructions.</p>
 
     <label>Photo <span style="text-transform:none;font-weight:500;">(optional)</span></label>
     <div class="photo-row">
@@ -752,6 +831,9 @@
     <label>How-to video URL <span style="text-transform:none;font-weight:500;">(optional)</span></label>
     <input type="text" id="fVideo" placeholder="e.g. https://youtube.com/watch?v=...">
 
+    <label>Instructions <span style="text-transform:none;font-weight:500;">(optional)</span></label>
+    <textarea id="fInstructions" rows="4" placeholder="Step-by-step form cues... or pick a suggestion above to fill this in automatically"></textarea>
+
     <label>Days</label>
     <div class="days-grid" id="daysGrid"></div>
     <button class="all-toggle" id="allDaysBtn">Select all days</button>
@@ -769,7 +851,7 @@
     <h2>Adjust photo</h2>
     <div class="crop-wrap">
       <div class="crop-stage" id="cropStage">
-        <img id="cropImg" src="" alt="" draggable="false">
+        <img id="cropImg" src="" alt="" draggable="false" crossorigin="anonymous">
       </div>
       <div class="crop-mask"></div>
     </div>
@@ -809,6 +891,10 @@
     <h3 class="display" id="detailName"></h3>
     <p class="detail-meta" id="detailMeta"></p>
     <p class="detail-days" id="detailDays"></p>
+    <div id="detailInstructionsWrap" style="display:none;">
+      <p class="detail-instructions-label">Instructions</p>
+      <p class="detail-instructions" id="detailInstructions"></p>
+    </div>
     <button type="button" class="io-btn detail-video-btn" id="detailVideoBtn" style="display:none;"></button>
     <button type="button" class="btn primary detail-complete-btn" id="detailCompleteBtn"></button>
   </div>
@@ -893,6 +979,8 @@
   const fSets = document.getElementById('fSets');
   const fHold = document.getElementById('fHold');
   const fVideo = document.getElementById('fVideo');
+  const fInstructions = document.getElementById('fInstructions');
+  const acDropdown = document.getElementById('acDropdown');
   const fImage = document.getElementById('fImage');
   const photoPreview = document.getElementById('photoPreview');
   const choosePhotoBtn = document.getElementById('choosePhotoBtn');
@@ -909,6 +997,8 @@
   const detailName = document.getElementById('detailName');
   const detailMeta = document.getElementById('detailMeta');
   const detailDays = document.getElementById('detailDays');
+  const detailInstructionsWrap = document.getElementById('detailInstructionsWrap');
+  const detailInstructions = document.getElementById('detailInstructions');
   const detailVideoBtn = document.getElementById('detailVideoBtn');
   const detailCompleteBtn = document.getElementById('detailCompleteBtn');
 
@@ -1054,6 +1144,12 @@
     detailMeta.textContent = metaText(w) || 'No reps or sets set';
     detailDays.textContent = dayTag(w.days);
     detailPhoto.innerHTML = avatarHtml(w);
+    if(w.instructions){
+      detailInstructionsWrap.style.display = '';
+      detailInstructions.textContent = w.instructions;
+    } else {
+      detailInstructionsWrap.style.display = 'none';
+    }
     if(w.videoUrl){
       detailVideoBtn.style.display = '';
       detailVideoBtn.innerHTML = `${PLAY_ICON.replace('fill="white"','fill="currentColor" width="12" height="12"')} Watch demo`;
@@ -1281,6 +1377,81 @@
     fImage.value = '';
   });
 
+  // ---- Exercise autocomplete (free-exercise-db)
+  const EXDB_JSON_URL = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/dist/exercises.json';
+  const EXDB_IMAGE_BASE = 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/';
+  let exerciseDbPromise = null;
+  function loadExerciseDb(){
+    if(!exerciseDbPromise){
+      exerciseDbPromise = fetch(EXDB_JSON_URL).then(r=>{
+        if(!r.ok) throw new Error('bad response');
+        return r.json();
+      }).catch(()=>{
+        exerciseDbPromise = null; // allow retry on next attempt
+        return null;
+      });
+    }
+    return exerciseDbPromise;
+  }
+  function hideSuggestions(){
+    acDropdown.classList.add('hidden');
+    acDropdown.innerHTML = '';
+  }
+  function showSuggestionsStatus(text){
+    acDropdown.innerHTML = `<div class="ac-status">${escapeHtml(text)}</div>`;
+    acDropdown.classList.remove('hidden');
+  }
+  function renderSuggestions(matches){
+    if(!matches.length){
+      showSuggestionsStatus('No matches — you can still enter this exercise manually.');
+      return;
+    }
+    acDropdown.innerHTML = matches.map((ex,i)=>{
+      const sub = [ex.primaryMuscles && ex.primaryMuscles[0], ex.equipment].filter(Boolean).join(' · ');
+      return `<div class="ac-item" data-idx="${i}">${escapeHtml(ex.name)}${sub?`<div class="ac-sub">${escapeHtml(sub)}</div>`:''}</div>`;
+    }).join('');
+    acDropdown.classList.remove('hidden');
+    acDropdown.querySelectorAll('.ac-item').forEach(el=>{
+      el.addEventListener('mousedown', (e)=>{
+        e.preventDefault(); // keep focus so blur doesn't hide dropdown before this fires
+        const idx = parseInt(el.getAttribute('data-idx'), 10);
+        selectSuggestion(matches[idx]);
+      });
+    });
+  }
+  function selectSuggestion(ex){
+    fName.value = ex.name;
+    if(Array.isArray(ex.instructions) && ex.instructions.length){
+      fInstructions.value = ex.instructions.map((s,i)=>`${i+1}. ${s}`).join('\n');
+    }
+    hideSuggestions();
+    if(ex.images && ex.images[0]){
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = ()=> openCropTool(img);
+      img.onerror = ()=> showToast("Couldn't load a photo for that exercise");
+      img.src = EXDB_IMAGE_BASE + ex.images[0];
+    }
+  }
+  let acDebounceTimer = null;
+  fName.addEventListener('input', ()=>{
+    const q = fName.value.trim();
+    clearTimeout(acDebounceTimer);
+    if(q.length < 2){ hideSuggestions(); return; }
+    acDebounceTimer = setTimeout(async ()=>{
+      showSuggestionsStatus('Searching…');
+      const db = await loadExerciseDb();
+      if(fName.value.trim() !== q) return; // input changed while we were fetching
+      if(!db){ showSuggestionsStatus("Couldn't reach the exercise database — check your connection."); return; }
+      const ql = q.toLowerCase();
+      const matches = db.filter(e => e.name.toLowerCase().includes(ql)).slice(0, 8);
+      renderSuggestions(matches);
+    }, 250);
+  });
+  fName.addEventListener('blur', ()=>{
+    setTimeout(hideSuggestions, 120); // let a mousedown selection register first
+  });
+
   // ---- Crop tool
   const CROP_SIZE = 240;
   const CROP_OUTPUT = 320;
@@ -1390,6 +1561,7 @@
       fSets.value = w.sets || '';
       fHold.value = w.hold || '';
       fVideo.value = w.videoUrl || '';
+      fInstructions.value = w.instructions || '';
       formImage = w.image || '';
       formDays = new Set(w.days || []);
     } else {
@@ -1399,9 +1571,11 @@
       fSets.value = '';
       fHold.value = '';
       fVideo.value = '';
+      fInstructions.value = '';
       formImage = '';
       formDays = new Set([0,1,2,3,4,5,6]);
     }
+    hideSuggestions();
     renderPhotoPreview();
     syncDaysGrid();
     overlay.classList.remove('hidden');
@@ -1409,6 +1583,7 @@
   }
   function closeSheet(){
     overlay.classList.add('hidden');
+    hideSuggestions();
     editingId = null;
   }
   document.getElementById('openAdd').addEventListener('click', ()=>openSheet(null));
@@ -1420,6 +1595,7 @@
     if(!name){ fName.focus(); return; }
     const days = [...formDays];
     const videoUrl = normalizeUrl(fVideo.value);
+    const instructions = fInstructions.value.trim();
     let backup = null;
     if(editingId){
       const w = workouts.find(x=>x.id===editingId);
@@ -1431,9 +1607,10 @@
       w.days = days;
       w.image = formImage;
       w.videoUrl = videoUrl;
+      w.instructions = instructions;
     } else {
       const id = slugify(name) + '-' + Date.now().toString(36).slice(-4);
-      workouts.push({id, name, reps: fReps.value.trim(), sets: fSets.value.trim(), hold: fHold.value.trim(), days, image: formImage, videoUrl});
+      workouts.push({id, name, reps: fReps.value.trim(), sets: fSets.value.trim(), hold: fHold.value.trim(), days, image: formImage, videoUrl, instructions});
     }
     const ok = saveWorkouts(workouts);
     if(!ok){
@@ -1490,7 +1667,8 @@
           hold: String(w.hold || ''),
           days: Array.isArray(w.days) ? w.days.filter(d=>Number.isInteger(d) && d>=0 && d<=6) : [0,1,2,3,4,5,6],
           image: typeof w.image === 'string' ? w.image : '',
-          videoUrl: typeof w.videoUrl === 'string' ? normalizeUrl(w.videoUrl) : ''
+          videoUrl: typeof w.videoUrl === 'string' ? normalizeUrl(w.videoUrl) : '',
+          instructions: typeof w.instructions === 'string' ? w.instructions : ''
         }));
         if(!confirm(`Import ${cleaned.length} workout(s)? This will replace your current list.`)) { importInput.value=''; return; }
         const previous = workouts;
